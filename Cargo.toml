@@ -1,0 +1,27 @@
+[package]
+name = "lume-lsp"
+version = "0.1.0"
+rust-version = "1.88.0"
+edition = "2024"
+
+[dependencies]
+arc = { path = "../Lume/compiler/arc" }
+lume_driver = { path = "../Lume/compiler/lume_driver" }
+lume_errors = { path = "../Lume/compiler/lume_errors" }
+lume_parser = { path = "../Lume/compiler/lume_parser" }
+lume_session = { path = "../Lume/compiler/lume_session" }
+lume_span = { path = "../Lume/compiler/lume_span" }
+
+clap = { version = "=4.5.41", features = ["derive"] }
+error_snippet = { version = "=0.1.16" }
+log = { version = "=0.4.27" }
+lsp-server = { version = "=0.7.8" }
+lsp-types = { version = "=0.94.1" }
+serde = { version = "=1.0.219" }
+serde_json = { version = "=1.0.140" }
+simple-logging = { version = "=2.0.2" }
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+must_use_candidate = "allow"
+wildcard_imports = "allow"
