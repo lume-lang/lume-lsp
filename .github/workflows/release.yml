@@ -32,6 +32,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: taiki-e/github-actions/install-rust@main
+        with:
+          toolchain: nightly
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: lume-lsp
