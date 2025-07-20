@@ -6,7 +6,7 @@ edition = "2024"
 
 [dependencies]
 arc = { git = "https://github.com/lume-lang/lume" }
-lume_driver = { git = "https://github.com/lume-lang/lume" }
+lume_driver = { git = "https://github.com/lume-lang/lume", default-features = false }
 lume_errors = { git = "https://github.com/lume-lang/lume" }
 lume_parser = { git = "https://github.com/lume-lang/lume" }
 lume_session = { git = "https://github.com/lume-lang/lume" }
