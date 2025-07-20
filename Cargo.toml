@@ -5,12 +5,12 @@ rust-version = "1.88.0"
 edition = "2024"
 
 [dependencies]
-arc = { path = "../Lume/compiler/arc" }
-lume_driver = { path = "../Lume/compiler/lume_driver" }
-lume_errors = { path = "../Lume/compiler/lume_errors" }
-lume_parser = { path = "../Lume/compiler/lume_parser" }
-lume_session = { path = "../Lume/compiler/lume_session" }
-lume_span = { path = "../Lume/compiler/lume_span" }
+arc = { git = "https://github.com/lume-lang/lume" }
+lume_driver = { git = "https://github.com/lume-lang/lume" }
+lume_errors = { git = "https://github.com/lume-lang/lume" }
+lume_parser = { git = "https://github.com/lume-lang/lume" }
+lume_session = { git = "https://github.com/lume-lang/lume" }
+lume_span = { git = "https://github.com/lume-lang/lume" }
 
 clap = { version = "=4.5.41", features = ["derive"] }
 error_snippet = { version = "=0.1.16" }
