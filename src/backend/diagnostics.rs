@@ -1,5 +1,6 @@
 use std::fmt::Write as _;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use error_snippet::IntoDiagnostic;
 use lsp_server::{Connection, Message};
@@ -98,7 +99,7 @@ impl Backend {
     }
 
     /// Publishes the given [`DiagnosticDiagnostic`] to the given file.
-    pub(crate) fn publish_diagnostics_to_file(conn: &Connection, diag: &[Diagnostic], file: Url) {
+    pub(crate) fn publish_diagnostics_to_file(conn: &Connection, diag: &[Diagnostic], file: Uri) {
         let params = PublishDiagnosticsParams {
             uri: file,
             diagnostics: diag.to_vec(),
@@ -124,12 +125,12 @@ impl Backend {
 
         // Canonicalize the path to an absolute path, if not already.
         let url = if file_path.has_root() {
-            Url::from_file_path(file_path).unwrap()
+            Uri::from_str(file_path.to_str().unwrap()).unwrap()
         } else {
-            self.workspace_root
-                .as_ref()?
-                .join(file_path.as_os_str().to_str().unwrap())
-                .unwrap()
+            let root = PathBuf::from(self.workspace_root.as_ref()?.as_str());
+            let absolute = root.join(file_path.as_os_str().to_str().unwrap());
+
+            Uri::from_str(absolute.to_str().unwrap()).unwrap()
         };
 
         Some(DiagnosticLabel {

@@ -12,12 +12,13 @@ lume_parser = { git = "https://github.com/lume-lang/lume" }
 lume_session = { git = "https://github.com/lume-lang/lume" }
 lume_span = { git = "https://github.com/lume-lang/lume" }
 
-clap = { version = "=4.5.41", features = ["derive"] }
-error_snippet = { version = "=0.1.16" }
-log = { version = "=0.4.27" }
-lsp-server = { version = "=0.7.8" }
-lsp-types = { version = "=0.94.1" }
-serde = { version = "=1.0.219" }
+clap = { version = "4.5", features = ["derive"] }
+error_snippet = { version = "0.1" }
+indexmap = { version = "2.11" }
+log = { version = "0.4" }
+lsp-server = { version = "=0.7.9" }
+lsp-types = { version = "=0.97.0" }
+serde = { version = "1.0" }
 serde_json = { version = "=1.0.140" }
 simple-logging = { version = "=2.0.2" }
 
