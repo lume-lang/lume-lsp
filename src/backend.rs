@@ -1,5 +1,6 @@
 pub(crate) mod diagnostics;
 
+use indexmap::IndexMap;
 use lsp_server::{Connection, ErrorCode, Message, RequestId, Response};
 use lsp_types::notification::*;
 use lsp_types::*;
@@ -8,6 +9,7 @@ use error_snippet::IntoDiagnostic;
 use lume_driver::CheckedPackageGraph;
 use lume_errors::DiagCtx;
 use lume_errors::Result;
+use lume_span::FileName;
 
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -128,6 +130,20 @@ impl Backend {
                 self.sources.insert(params.text_document.uri, params.text.unwrap());
                 self.check_package_root(conn);
             }
+            DidChangeTextDocument::METHOD => {
+                let params: DidChangeTextDocumentParams = match serde_json::from_value(notification.params.clone()) {
+                    Ok(params) => params,
+                    Err(err) => return Err(err.into_diagnostic()),
+                };
+
+                log::info!("updated document {} (via change)", params.text_document.uri.as_str());
+
+                let uri = params.text_document.uri;
+                let source = params.content_changes.first().unwrap().text.clone();
+
+                self.sources.insert(uri, source);
+                self.check_package_root(conn);
+            }
             _ => {}
         }
 
@@ -147,11 +163,40 @@ impl Backend {
 
         self.checked_graph = self.dcx.with_opt(|dcx| {
             let driver = lume_driver::Driver::from_root(&path, dcx)?;
+            let source_overrides = self.build_source_overrides();
 
-            driver.check(lume_session::Options::default())
+            driver.check(lume_session::Options {
+                source_overrides: Some(source_overrides),
+                ..Default::default()
+            })
         });
 
         self.drain_dcx_diagnostics(conn);
+    }
+
+    /// Builds the overrides of source files which we currently have in-memory
+    /// in the language server.
+    ///
+    /// Some of these might not need to be overwritten, as they are the same as
+    /// they are on the disk. But, since the operation is a [`IndexMap::extend`]-call,
+    /// it's a relatively quick operation.
+    fn build_source_overrides(&self) -> IndexMap<FileName, String> {
+        let mut source_overrides = IndexMap::new();
+
+        for (url, source) in &self.sources {
+            let file_path = PathBuf::from(url.path().as_str());
+            let workspace_root = self.workspace_root.as_ref().unwrap().path().as_str();
+
+            let relative_path = if file_path.starts_with(workspace_root) {
+                FileName::Real(file_path.strip_prefix(workspace_root).unwrap().to_path_buf())
+            } else {
+                FileName::Real(file_path)
+            };
+
+            source_overrides.insert(relative_path, source.clone());
+        }
+
+        source_overrides
     }
 
     #[expect(dead_code)]
