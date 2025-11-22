@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use lsp_types::*;
@@ -8,11 +10,36 @@ use crate::state::State;
 pub(crate) fn open_document(state: &mut State, params: DidOpenTextDocumentParams) {
     log::info!("added document {}", params.text_document.uri.as_str());
 
-    let TextDocumentItem { uri, text, .. } = params.text_document;
+    let uri = &params.text_document.uri;
+
     let Some(source_file) = state.source_of_uri(&uri) else {
+        // If we don't currently have a current workspace, try to locate the
+        // workspace root by iterating the parent directories of the newly-opened file.
+        if state.checked.graph.packages.is_empty() {
+            let mut iter_path = PathBuf::from(uri.path().as_str());
+
+            while let Some(directory) = iter_path.parent() {
+                if !directory.join("Arcfile").exists() {
+                    iter_path = directory.to_path_buf();
+                    continue;
+                }
+
+                let workspace_root = format!("file://{}", directory.to_str().unwrap());
+                state.vfs.workspace_root = Uri::from_str(&workspace_root).unwrap();
+                state.compile_workspace();
+
+                // If we actually found any packages, try to run the handler again.
+                if !state.checked.graph.packages.is_empty() {
+                    return open_document(state, params);
+                }
+            }
+        }
+
         log::error!("could not find any matching package");
         return;
     };
+
+    let TextDocumentItem { uri, text, .. } = params.text_document;
 
     state.vfs.add_document(
         uri,
