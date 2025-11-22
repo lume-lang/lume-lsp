@@ -64,7 +64,7 @@ dependencies = [
 [[package]]
 name = "arc"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -844,7 +844,7 @@ dependencies = [
 [[package]]
 name = "lume_assets"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "dirs",
  "lume_errors",
@@ -853,12 +853,12 @@ dependencies = [
 [[package]]
 name = "lume_ast"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 
 [[package]]
 name = "lume_driver"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "arc",
  "error_snippet",
@@ -885,7 +885,7 @@ dependencies = [
 [[package]]
 name = "lume_errors"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -895,7 +895,7 @@ dependencies = [
 [[package]]
 name = "lume_hir"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -910,7 +910,7 @@ dependencies = [
 [[package]]
 name = "lume_hir_lower"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "arc",
  "error_snippet",
@@ -928,7 +928,7 @@ dependencies = [
 [[package]]
 name = "lume_infer"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -946,7 +946,7 @@ dependencies = [
 [[package]]
 name = "lume_lexer"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -958,7 +958,7 @@ dependencies = [
 [[package]]
 name = "lume_linker"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "dirs",
  "error_snippet",
@@ -972,7 +972,7 @@ dependencies = [
 [[package]]
 name = "lume_macros"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -982,7 +982,7 @@ dependencies = [
 [[package]]
 name = "lume_metadata"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "indexmap",
  "lume_hir",
@@ -994,7 +994,7 @@ dependencies = [
 [[package]]
 name = "lume_mir"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "indexmap",
  "libftrace",
@@ -1010,7 +1010,7 @@ dependencies = [
 [[package]]
 name = "lume_mir_lower"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "indexmap",
  "lume_hir",
@@ -1027,7 +1027,7 @@ dependencies = [
 [[package]]
 name = "lume_mir_opt"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "indexmap",
  "libftrace",
@@ -1042,7 +1042,7 @@ dependencies = [
 [[package]]
 name = "lume_mir_queries"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "indexmap",
  "libftrace",
@@ -1057,7 +1057,7 @@ dependencies = [
 [[package]]
 name = "lume_parser"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -1071,7 +1071,7 @@ dependencies = [
 [[package]]
 name = "lume_session"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -1088,7 +1088,7 @@ dependencies = [
 [[package]]
 name = "lume_span"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -1100,7 +1100,7 @@ dependencies = [
 [[package]]
 name = "lume_tir"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "indexmap",
  "lume_session",
@@ -1112,7 +1112,7 @@ dependencies = [
 [[package]]
 name = "lume_tir_lower"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -1130,7 +1130,7 @@ dependencies = [
 [[package]]
 name = "lume_type_metadata"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "indexmap",
  "lume_hir",
@@ -1142,7 +1142,7 @@ dependencies = [
 [[package]]
 name = "lume_typech"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",
@@ -1161,7 +1161,7 @@ dependencies = [
 [[package]]
 name = "lume_types"
 version = "0.1.1"
-source = "git+https://github.com/lume-lang/lume#f3563ba7d9cf331e565461eb5bc2274a69d654d9"
+source = "git+https://github.com/lume-lang/lume#b81b1badb944625503bbddf7917e0446231cb84d"
 dependencies = [
  "error_snippet",
  "error_snippet_derive",

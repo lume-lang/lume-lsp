@@ -15,11 +15,12 @@ pub(crate) fn hover_content_of(state: &State, location: Location) -> Result<Stri
     match &sym.kind {
         SymbolKind::Type { name } => hover_content_of_type(state, location, name),
         SymbolKind::Callable { reference } => hover_content_of_callable(state, location, *reference),
-        SymbolKind::Member { callee, field } => hover_content_of_member(state, location, *callee, field),
         SymbolKind::Variant { name } => hover_content_of_variant(state, location, name),
         SymbolKind::Pattern { id } => hover_content_of_pattern(state, location, *id),
         SymbolKind::Field { id } => hover_content_of_field(state, location, *id),
         SymbolKind::Call { id } => hover_content_of_call(state, location, *id),
+        SymbolKind::Literal { id } => hover_content_of_literal(state, location, *id),
+        SymbolKind::Member { callee, field } => hover_content_of_member(state, location, *callee, field),
         SymbolKind::VariableReference { id } => hover_content_of_variable_ref(state, location, *id),
     }
 }
@@ -34,6 +35,11 @@ pub(crate) fn hover_content_of_type(state: &State, location: Location, type_name
         return Ok(String::new());
     };
 
+    let documentation = match package.tcx.documentation_string_of(type_id) {
+        Some(str) => format!("\n\n{str}"),
+        None => String::new(),
+    };
+
     match type_def {
         lume_hir::TypeDefinition::Struct(struct_def) => {
             let builtin = if struct_def.builtin {
@@ -43,17 +49,18 @@ pub(crate) fn hover_content_of_type(state: &State, location: Location, type_name
             };
 
             Ok(format!(
-                "```lm\n{} struct {builtin}{:+}\n```",
+                "```lm\n{} struct {builtin}{:+}\n```{documentation}",
                 struct_def.visibility, struct_def.name
             ))
         }
         lume_hir::TypeDefinition::Trait(trait_def) => Ok(format!(
-            "```lm\n{} trait {:+}\n```",
+            "```lm\n{} trait {:+}\n```{documentation}",
             trait_def.visibility, trait_def.name
         )),
-        lume_hir::TypeDefinition::Enum(enum_def) => {
-            Ok(format!("```lm\n{} enum {:+}\n```", enum_def.visibility, enum_def.name))
-        }
+        lume_hir::TypeDefinition::Enum(enum_def) => Ok(format!(
+            "```lm\n{} enum {:+}\n```{documentation}",
+            enum_def.visibility, enum_def.name
+        )),
     }
 }
 
@@ -72,7 +79,12 @@ pub(crate) fn hover_content_of_callable(state: &State, location: Location, refer
         None => String::new(),
     };
 
-    Ok(format!("```lm\n{visibility}{signature}\n```"))
+    let documentation = match package.tcx.documentation_string_of(callable.id()) {
+        Some(str) => format!("\n\n{str}"),
+        None => String::new(),
+    };
+
+    Ok(format!("```lm\n{visibility}{signature}\n```{documentation}"))
 }
 
 pub(crate) fn hover_content_of_member(
@@ -90,8 +102,13 @@ pub(crate) fn hover_content_of_member(
 
     let field_type = package.tcx.new_named_type(&field.field_type, true)?;
 
+    let documentation = match package.tcx.documentation_string_of(field.id) {
+        Some(str) => format!("\n\n{str}"),
+        None => String::new(),
+    };
+
     Ok(format!(
-        "```lm\n{} {}: {field_type};\n```",
+        "```lm\n{} {}: {field_type};\n```{documentation}",
         field.visibility, field.name
     ))
 }
@@ -116,7 +133,15 @@ pub(crate) fn hover_content_of_variant(state: &State, location: Location, name: 
         format!("({fields})")
     };
 
-    Ok(format!("```lm\n{:+}::{}{fields}\n```", enum_def.name, enum_case.name))
+    let documentation = match package.tcx.documentation_string_of(enum_def.id) {
+        Some(str) => format!("\n\n{str}"),
+        None => String::new(),
+    };
+
+    Ok(format!(
+        "```lm\n{:+}::{}{fields}\n```{documentation}",
+        enum_def.name, enum_case.name
+    ))
 }
 
 pub(crate) fn hover_content_of_pattern(state: &State, location: Location, id: NodeId) -> Result<String> {
@@ -129,7 +154,12 @@ pub(crate) fn hover_content_of_pattern(state: &State, location: Location, id: No
     let pattern_ty = package.tcx.type_of_pattern(pattern)?;
     let pattern_ty_name = package.tcx.new_named_type(&pattern_ty, true)?;
 
-    Ok(format!("```lm\n{pattern_ty_name}\n```"))
+    let documentation = match package.tcx.documentation_string_of(pattern_ty.instance_of) {
+        Some(str) => format!("\n\n{str}"),
+        None => String::new(),
+    };
+
+    Ok(format!("```lm\n{pattern_ty_name}\n```{documentation}"))
 }
 
 pub(crate) fn hover_content_of_field(state: &State, location: Location, id: NodeId) -> Result<String> {
@@ -143,10 +173,26 @@ pub(crate) fn hover_content_of_field(state: &State, location: Location, id: Node
     let field_type_ref = package.tcx.mk_type_ref_from(&field.field_type, struct_def.id)?;
     let field_type = package.tcx.new_named_type(&field_type_ref, true)?;
 
+    let documentation = match package.tcx.documentation_string_of(id) {
+        Some(str) => format!("\n\n{str}"),
+        None => String::new(),
+    };
+
     Ok(format!(
-        "```lm\n{:+}\n\n{}: {field_type};\n```",
+        "```lm\n{:+}\n\n{}: {field_type};\n```{documentation}",
         struct_def.name, field.name
     ))
+}
+
+pub(crate) fn hover_content_of_literal(state: &State, location: Location, id: NodeId) -> Result<String> {
+    let package = state.checked.graph.packages.get(&location.file.package).unwrap();
+    let literal_type = package.tcx.type_of(id)?;
+
+    let Some(literal_type_def) = package.tcx.tdb().type_(literal_type.instance_of) else {
+        return Ok(String::new());
+    };
+
+    hover_content_of_type(state, location, &literal_type_def.name)
 }
 
 pub(crate) fn hover_content_of_call(state: &State, location: Location, id: NodeId) -> Result<String> {

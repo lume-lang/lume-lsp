@@ -54,6 +54,9 @@ pub(crate) enum SymbolKind {
     /// Symbol refers to a call expression.
     Call { id: NodeId },
 
+    /// Symbol refers to a literal expression.
+    Literal { id: NodeId },
+
     /// Symbol refers to a member expression.
     Member {
         callee: NodeId,
@@ -242,7 +245,12 @@ impl Visitor for LocationVisitor {
                     location: expr.location,
                 });
             }
-            lume_hir::ExpressionKind::Literal(_) => {}
+            lume_hir::ExpressionKind::Literal(expr) => {
+                self.symbols.insert(SymbolEntry {
+                    kind: SymbolKind::Literal { id: expr.id },
+                    location: expr.location,
+                });
+            }
         }
 
         Ok(())
