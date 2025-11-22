@@ -7,13 +7,15 @@ edition = "2024"
 [dependencies]
 arc = { git = "https://github.com/lume-lang/lume" }
 lume_driver = { git = "https://github.com/lume-lang/lume", default-features = false }
-lume_errors = { git = "https://github.com/lume-lang/lume" }
+lume_errors = { git = "https://github.com/lume-lang/lume"}
+lume_hir = { git = "https://github.com/lume-lang/lume" }
+lume_infer = { git = "https://github.com/lume-lang/lume" }
 lume_parser = { git = "https://github.com/lume-lang/lume" }
 lume_session = { git = "https://github.com/lume-lang/lume" }
 lume_span = { git = "https://github.com/lume-lang/lume" }
 
 clap = { version = "4.5", features = ["derive"] }
-error_snippet = { version = "0.1" }
+error_snippet = { version = "^0" }
 indexmap = { version = "2.11" }
 log = { version = "0.4" }
 lsp-server = { version = "=0.7.9" }
@@ -21,6 +23,7 @@ lsp-types = { version = "=0.97.0" }
 serde = { version = "1.0" }
 serde_json = { version = "=1.0.140" }
 simple-logging = { version = "=2.0.2" }
+crossbeam = { version = "0.8.4", features = ["crossbeam-channel"] }
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }

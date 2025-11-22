@@ -2,24 +2,21 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use error_snippet::IntoDiagnostic;
-use lsp_server::{Connection, Message};
+use lsp_server::Message;
 use lsp_types::notification::*;
 use lsp_types::*;
 
-use lume_errors::Result;
-
-use crate::backend::Backend;
+use crate::state::State;
 
 pub const LSP_SOURCE_LUME: &str = "lume";
 
-impl Backend {
+impl State {
     /// Drain all diagnostics from the inner diagnostics context to
     /// the language client.
-    pub(crate) fn drain_dcx_diagnostics(&self, conn: &Connection) {
+    pub(crate) fn drain_dcx_diagnostics(&self) {
         self.dcx.with_iter(|diagnostics| {
             for diagnostic in diagnostics {
-                self.publish_diagnostic(conn, diagnostic.as_ref());
+                self.publish_diagnostic(diagnostic.as_ref());
             }
         });
 
@@ -27,18 +24,19 @@ impl Backend {
         // be reported on the next drain either.
         self.dcx.clear();
 
-        // Take all the files which had one-or-more diagnostics, but no longer do and push
-        // an empty list of diagnostics to the client.
+        // Take all the files which had one-or-more diagnostics, but no longer do and
+        // push an empty list of diagnostics to the client.
         let prev = self.error_files_prev.read().unwrap();
         let curr = self.error_files_curr.read().unwrap();
 
         for file_url in prev.difference(&curr) {
-            Self::publish_diagnostics_to_file(conn, &[], file_url.clone());
+            self.publish_diagnostics_to_file(&[], file_url.clone());
         }
     }
 
-    /// Publishes the given [`error_snippet::Diagnostic`] to the language client.
-    pub(crate) fn publish_diagnostic(&self, conn: &Connection, diagnostic: &dyn error_snippet::Diagnostic) {
+    /// Publishes the given [`error_snippet::Diagnostic`] to the language
+    /// client.
+    pub(crate) fn publish_diagnostic(&self, diagnostic: &dyn error_snippet::Diagnostic) {
         let Some(labels) = diagnostic.labels() else {
             return;
         };
@@ -95,18 +93,18 @@ impl Backend {
             data: None,
         };
 
-        Self::publish_diagnostics_to_file(conn, &[diag], primary_label.location.uri.clone());
+        self.publish_diagnostics_to_file(&[diag], primary_label.location.uri.clone());
     }
 
     /// Publishes the given [`DiagnosticDiagnostic`] to the given file.
-    pub(crate) fn publish_diagnostics_to_file(conn: &Connection, diag: &[Diagnostic], file: Uri) {
+    pub(crate) fn publish_diagnostics_to_file(&self, diag: &[Diagnostic], file: Uri) {
         let params = PublishDiagnosticsParams {
             uri: file,
             diagnostics: diag.to_vec(),
             version: None,
         };
 
-        conn.sender
+        self.dispatcher
             .send(Message::Notification(lsp_server::Notification::new(
                 PublishDiagnostics::METHOD.to_owned(),
                 params,
@@ -116,7 +114,8 @@ impl Backend {
 
     /// Lower the given [`error_snippet::Label`] into a [`DiagnosticLabel`].
     ///
-    /// If the label doesn't have any source content attached, [`None`] is returned.
+    /// If the label doesn't have any source content attached, [`None`] is
+    /// returned.
     fn lower_diagnostic_label(&self, label: &error_snippet::Label) -> Option<DiagnosticLabel> {
         let source = label.source()?;
         let position = position_from_range(source.content().as_ref(), &label.range().0);
@@ -124,20 +123,20 @@ impl Backend {
         let file_path = PathBuf::from(source.name()?);
 
         // Canonicalize the path to an absolute path, if not already.
-        let url = if file_path.has_root() {
-            Uri::from_str(file_path.to_str().unwrap()).unwrap()
-        } else {
-            let root = PathBuf::from(self.workspace_root.as_ref()?.as_str());
-            let absolute = root.join(file_path.as_os_str().to_str().unwrap());
+        let uri = if file_path.has_root() {
+            let file_path = format!("file://{}", file_path.display());
 
-            Uri::from_str(absolute.to_str().unwrap()).unwrap()
+            Uri::from_str(file_path.as_str()).unwrap()
+        } else {
+            let root = PathBuf::from(self.vfs.workspace_root.as_str());
+            let absolute = root.join(file_path.as_os_str().to_str().unwrap());
+            let file_path = format!("file://{}", absolute.display());
+
+            Uri::from_str(file_path.as_str()).unwrap()
         };
 
         Some(DiagnosticLabel {
-            location: Location {
-                uri: url,
-                range: position,
-            },
+            location: Location { uri, range: position },
             message: label.message().to_owned(),
         })
     }
@@ -173,24 +172,4 @@ fn position_from_index(text: &str, index: usize) -> Position {
     }
 
     Position::new(line, (index - line_start) as u32)
-}
-
-pub(crate) trait IntoError {
-    fn to_error(self) -> error_snippet::Error;
-}
-
-impl<T: std::error::Error + Send + Sync> IntoError for T {
-    fn to_error(self) -> error_snippet::Error {
-        Box::new(self).into_diagnostic()
-    }
-}
-
-pub(crate) trait MapError<TResult> {
-    fn map_error(self) -> Result<TResult>;
-}
-
-impl<T, E: std::error::Error + Send + Sync> MapError<T> for std::result::Result<T, E> {
-    fn map_error(self) -> Result<T> {
-        self.map_err(IntoError::to_error)
-    }
 }
