@@ -18,6 +18,9 @@ pub(crate) fn hover_content_of(state: &State, location: Location) -> Result<Stri
         SymbolKind::Member { callee, field } => hover_content_of_member(state, location, *callee, field),
         SymbolKind::Variant { name } => hover_content_of_variant(state, location, name),
         SymbolKind::Pattern { id } => hover_content_of_pattern(state, location, *id),
+        SymbolKind::Field { id } => hover_content_of_field(state, location, *id),
+        SymbolKind::Call { id } => hover_content_of_call(state, location, *id),
+        SymbolKind::VariableReference { id } => hover_content_of_variable_ref(state, location, *id),
     }
 }
 
@@ -127,4 +130,51 @@ pub(crate) fn hover_content_of_pattern(state: &State, location: Location, id: No
     let pattern_ty_name = package.tcx.new_named_type(&pattern_ty, true)?;
 
     Ok(format!("```lm\n{pattern_ty_name}\n```"))
+}
+
+pub(crate) fn hover_content_of_field(state: &State, location: Location, id: NodeId) -> Result<String> {
+    let package = state.checked.graph.packages.get(&location.file.package).unwrap();
+
+    let Some(lume_hir::Node::Field(field)) = package.tcx.hir_node(id) else {
+        return Ok(String::new());
+    };
+
+    let struct_def = package.tcx.owning_struct_of_field(id)?;
+    let field_type_ref = package.tcx.mk_type_ref_from(&field.field_type, struct_def.id)?;
+    let field_type = package.tcx.new_named_type(&field_type_ref, true)?;
+
+    Ok(format!(
+        "```lm\n{:+}\n\n{}: {field_type};\n```",
+        struct_def.name, field.name
+    ))
+}
+
+pub(crate) fn hover_content_of_call(state: &State, location: Location, id: NodeId) -> Result<String> {
+    let package = state.checked.graph.packages.get(&location.file.package).unwrap();
+    let Some(expr) = package.tcx.hir_call_expr(id) else {
+        return Ok(String::new());
+    };
+
+    let callable = package.tcx.probe_callable(expr)?;
+
+    hover_content_of_callable(state, location, callable.to_call_reference())
+}
+
+pub(crate) fn hover_content_of_variable_ref(state: &State, location: Location, id: NodeId) -> Result<String> {
+    let package = state.checked.graph.packages.get(&location.file.package).unwrap();
+
+    let Some(lume_hir::ExpressionKind::Variable(variable_ref)) = package.tcx.hir_expr(id).map(|e| &e.kind) else {
+        return Ok(String::new());
+    };
+
+    let variable_type = match &variable_ref.reference {
+        lume_hir::VariableSource::Variable(var_decl) => package.tcx.type_of_vardecl(var_decl)?,
+        lume_hir::VariableSource::Parameter(param) => package.tcx.mk_type_ref_from(&param.param_type, id)?,
+        lume_hir::VariableSource::Pattern(pattern) => package.tcx.type_of_pattern(pattern)?,
+    };
+
+    let variable_name = variable_ref.name.as_str();
+    let variable_type_name = package.tcx.new_named_type(&variable_type, true)?;
+
+    Ok(format!("```lm\nlet {variable_name}: {variable_type_name};\n```"))
 }

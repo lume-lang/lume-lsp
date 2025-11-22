@@ -27,10 +27,6 @@ pub(crate) fn on_hover(state: &State, id: RequestId, params: HoverParams) -> Res
         }
     };
 
-    if content.is_empty() {
-        log::warn!("no content for {location}");
-    }
-
     state.ok(id, &Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: lsp_types::MarkupKind::Markdown,

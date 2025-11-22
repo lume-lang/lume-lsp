@@ -1,5 +1,6 @@
 use indexmap::IndexSet;
 use lume_errors::Result;
+use lume_hir::WithLocation as _;
 use lume_infer::query::CallReference;
 use lume_span::{Location, NodeId};
 
@@ -35,22 +36,32 @@ impl Ord for SymbolEntry {
 
 #[derive(Hash, Debug, Clone, PartialEq, Eq)]
 pub(crate) enum SymbolKind {
-    Type {
-        name: lume_hir::Path,
-    },
-    Callable {
-        reference: CallReference,
-    },
+    /// Symbol refers to a generic type with a pathed name.
+    Type { name: lume_hir::Path },
+
+    /// Symbol refers to some callable - method, function or intrinsic.
+    Callable { reference: CallReference },
+
+    /// Symbol refers to a field within a structure.
+    Field { id: NodeId },
+
+    /// Symbol refers to a variant, modelled after some enum case.
+    Variant { name: lume_hir::Path },
+
+    /// Symbol refers to a generic pattern.
+    Pattern { id: NodeId },
+
+    /// Symbol refers to a call expression.
+    Call { id: NodeId },
+
+    /// Symbol refers to a member expression.
     Member {
         callee: NodeId,
         field: lume_hir::Identifier,
     },
-    Variant {
-        name: lume_hir::Path,
-    },
-    Pattern {
-        id: NodeId,
-    },
+
+    /// Symbol refers to a variable reference.
+    VariableReference { id: NodeId },
 }
 
 #[derive(Default)]
@@ -162,6 +173,12 @@ impl Visitor for LocationVisitor {
                     });
                 }
             },
+            lume_hir::Node::Field(field) => {
+                self.symbols.insert_sorted(SymbolEntry {
+                    kind: SymbolKind::Field { id: field.id },
+                    location: field.name.location,
+                });
+            }
             _ => {}
         }
 
@@ -172,10 +189,32 @@ impl Visitor for LocationVisitor {
         match &expr.kind {
             lume_hir::ExpressionKind::Assignment(_) => {}
             lume_hir::ExpressionKind::Cast(_) => {}
-            lume_hir::ExpressionKind::Construct(_) => {}
-            lume_hir::ExpressionKind::StaticCall(_) => {}
-            lume_hir::ExpressionKind::InstanceCall(_) => {}
-            lume_hir::ExpressionKind::IntrinsicCall(_) => {}
+            lume_hir::ExpressionKind::Construct(expr) => {
+                self.symbols.insert(SymbolEntry {
+                    kind: SymbolKind::Type {
+                        name: expr.path.clone(),
+                    },
+                    location: expr.path.name().location,
+                });
+            }
+            lume_hir::ExpressionKind::StaticCall(expr) => {
+                self.symbols.insert(SymbolEntry {
+                    kind: SymbolKind::Call { id: expr.id },
+                    location: expr.name.name().location,
+                });
+            }
+            lume_hir::ExpressionKind::InstanceCall(expr) => {
+                self.symbols.insert(SymbolEntry {
+                    kind: SymbolKind::Call { id: expr.id },
+                    location: expr.name.location(),
+                });
+            }
+            lume_hir::ExpressionKind::IntrinsicCall(expr) => {
+                self.symbols.insert(SymbolEntry {
+                    kind: SymbolKind::Call { id: expr.id },
+                    location: expr.location(),
+                });
+            }
             lume_hir::ExpressionKind::If(_) => {}
             lume_hir::ExpressionKind::Is(_) => {}
             lume_hir::ExpressionKind::Member(expr) => {
@@ -197,7 +236,30 @@ impl Visitor for LocationVisitor {
                     },
                 });
             }
-            lume_hir::ExpressionKind::Literal(_) | lume_hir::ExpressionKind::Variable(_) => {}
+            lume_hir::ExpressionKind::Variable(expr) => {
+                self.symbols.insert(SymbolEntry {
+                    kind: SymbolKind::VariableReference { id: expr.id },
+                    location: expr.location,
+                });
+            }
+            lume_hir::ExpressionKind::Literal(_) => {}
+        }
+
+        Ok(())
+    }
+
+    fn visit_path(&mut self, path: &lume_hir::Path) -> Result<()> {
+        let mut current = Some(path.clone());
+
+        while let Some(parent) = current {
+            if let lume_hir::PathSegment::Type { location, .. } = &parent.name {
+                self.symbols.insert(SymbolEntry {
+                    kind: SymbolKind::Type { name: parent.clone() },
+                    location: *location,
+                });
+            }
+
+            current = parent.parent();
         }
 
         Ok(())
